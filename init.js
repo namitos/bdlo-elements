@@ -1,4 +1,4 @@
-Array.prototype.groupBy = function (fn) {
+Array.prototype.groupBy = function(fn) {
   let obj = {};
   this.forEach((item) => {
     try {
@@ -14,7 +14,7 @@ Array.prototype.groupBy = function (fn) {
   return obj;
 };
 
-Array.prototype.keyBy = function (fn) {
+Array.prototype.keyBy = function(fn) {
   let obj = {};
   this.forEach((item) => {
     try {
@@ -170,6 +170,47 @@ models.Schema = class Schema {
 
 window.models = models;
 
+window.util = window.util || {};
+
+Object.assign(window.util, {
+  notify: (data, duration) => {
+    let el = util.dom.el('paper-toast', {
+      attributes: {
+        duration: duration || 10000
+      }
+    }, data instanceof Object ? data.body : data);
+    document.body.appendChild(el);
+    setTimeout(function() {
+      el.open();
+    }, 100);
+  },
+  dom: {
+    el: (name, properties = {}, children = null) => {
+      properties = properties || {};
+      let el = document.createElement(name);
+      if (properties.attributes) {
+        for (let key in properties.attributes) {
+          el.setAttribute(key, properties.attributes[key]);
+        }
+        delete properties.attributes;
+      }
+      Object.assign(el, properties);
+      if (children) {
+        if (typeof children === 'string') {
+          el.innerHTML = children;
+        } else if (children instanceof Array) {
+          children.forEach((item) => {
+            el.appendChild(item);
+          });
+        } else {
+          el.appendChild(children);
+        }
+      }
+      return el;
+    }
+  }
+})
+
 window.init = () => {
   return Promise.all([
     fetch('/init', {
@@ -194,5 +235,7 @@ window.init = () => {
     window.user = new models.User(init.user);
     window.socket = io();
     return init;
-  }).catch(err);
+  }).catch((err) => {
+    console.error(err);
+  });
 }

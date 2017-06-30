@@ -1,0 +1,40 @@
+<link rel="import" href="../polymer/polymer-element.html">
+<link rel="import" href="../polymer/lib/elements/dom-if.html">
+<link rel="import" href="../polymer/lib/elements/dom-repeat.html">
+
+<link rel="import" href="../ui-elements/fc-object/fc-object.html">
+<link rel="import" href="model-styles.html">
+
+<dom-module id="model-form">
+  <template>
+    <style include="model-styles"></style>
+    <iron-form>
+      <form on-submit="_submit">
+        <fc-object schema="[[schema]]" value="[[value]]"></fc-object>
+        <button nostyle><paper-button>Save</paper-button></button>
+      </form>
+    </iron-form>
+  </template>
+  <script>
+    /** @polymerElement */
+    class modelForm extends Polymer.Element {
+
+      static get is() {
+        return 'model-form';
+      }
+
+      static get properties() {
+        return {};
+      }
+
+      _submit(e) {
+        e.preventDefault();
+        if (e.target.parentNode.validate()) {
+          this.submit(e);
+        }
+      }
+    }
+
+    window.customElements.define(modelForm.is, modelForm);
+  </script>
+</dom-module>

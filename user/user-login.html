@@ -1,0 +1,92 @@
+<link rel="import" href="../../polymer/polymer-element.html">
+<link rel="import" href="../../polymer/lib/elements/dom-if.html">
+<link rel="import" href="../../polymer/lib/elements/dom-repeat.html">
+<link rel="import" href="../../paper-input/paper-input.html">
+<link rel="import" href="../../paper-button/paper-button.html">
+<link rel="import" href="../../iron-form/iron-form.html">
+
+<link rel="import" href="../model-styles.html">
+
+<dom-module id="user-login">
+  <template>
+    <style include="model-styles">
+       :host {
+        max-width: 360px;
+        margin: 16px auto;
+        padding: 0 16px 16px 16px;
+        background: #fff;
+        border-radius: 2px;
+        @apply --shadow-elevation-2dp;
+      }
+
+      button,
+      paper-button {
+        width: 100%;
+        margin: 0;
+      }
+    </style>
+    <iron-form>
+      <form on-submit="signIn">
+        <paper-input required auto-validate name="username" value="{{username}}" label="Email" type="email"></paper-input>
+        <paper-input required auto-validate name="password" value="{{password}}" label="Password" type="password"></paper-input>
+        <button nostyle>
+          <paper-button>Sign in</paper-button>
+        </button>
+        <template is="dom-if" if="[[loading]]">
+          <paper-spinner active></paper-spinner>
+        </template>
+      </form>
+    </iron-form>
+  </template>
+  <script>
+    /** @polymerElement */
+    class UserLogin extends Polymer.Element {
+      static get is() {
+        return "user-login"
+      }
+
+      static get properties() {
+        return {
+          loading: {
+            type: Boolean,
+            value: false
+          },
+          fireEvents: {
+            type: Boolean,
+            value: false
+          }
+        }
+      }
+
+      async signIn(e) {
+        if (e.target.parentNode.validate()) {
+          let response = await fetch('/auth/login', {
+            credentials: 'include',
+            method: 'post',
+            headers: {
+              "Content-type": "application/json; charset=UTF-8"
+            },
+            body: JSON.stringify({
+              username: this.username,
+              password: this.password
+            })
+          });
+          let data = await response.json();
+
+          if (this.fireEvents) {
+            this.dispatchEvent(new CustomEvent('change', {
+              detail: data.result === 'success'
+            }));
+          } else {
+            if (data.result === 'success') {
+              location.reload();
+            } else {
+              util.notify("Your password doesn't match");
+            }
+          }
+        }
+      }
+    }
+    window.customElements.define(UserLogin.is, UserLogin);
+  </script>
+</dom-module>

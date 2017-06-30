@@ -1,0 +1,126 @@
+<link rel="import" href="../polymer/polymer-element.html">
+<link rel="import" href="../polymer/lib/elements/dom-if.html">
+<link rel="import" href="../polymer/lib/elements/dom-repeat.html">
+<link rel="import" href="../iron-icons/iron-icons.html">
+<link rel="import" href="../paper-input/paper-input.html">
+
+<link rel="import" href="lib/lodash.html">
+<link rel="import" href="model-styles.html">
+<link rel="import" href="mixins/editor-mixin.html">
+
+<dom-module id="model-table">
+  <template>
+    <style include="model-styles">
+      paper-fab {
+        position: fixed;
+        right: 24px;
+        bottom: 24px;
+        z-index: 1;
+      }
+
+      [pager] {
+        width: 50px;
+      }
+    </style>
+
+    <paper-fab icon="add" title="Добавить" on-click="addDialog"></paper-fab>
+    <paper-input pager type="number" value="{{page}}" label="Page" min="0"></paper-input>
+    <table class="table">
+      <tr>
+        <template is="dom-if" if="[[header.length]]">
+          <template is="dom-repeat" items="[[header]]" as="headerItem">
+            <th>[[_header(headerItem)]]</th>
+          </template>
+        </template>
+        <template is="dom-if" if="[[!header.length]]">
+          <th>Name</th>
+        </template>
+        <th></th>
+      </tr>
+      <template is="dom-repeat" items="[[items]]">
+        <tr>
+          <template is="dom-if" if="[[header.length]]">
+            <template is="dom-repeat" items="[[header]]" as="headerItem">
+              <td>[[_field(item, headerItem)]]</td>
+            </template>
+          </template>
+          <template is="dom-if" if="[[!header.length]]">
+            <td>[[_fieldTitle(item)]]</td>
+          </template>
+          <td>
+            <paper-icon-button icon="icons:create" on-click="_editDialog"></paper-icon-button>
+            <template is="dom-if" if="[[item.deleted]]">
+              <span hidden>[[item]]</span>
+              <paper-icon-button icon="icons:undo" on-click="_undoDialog"></paper-icon-button>
+            </template>
+            <template is="dom-if" if="[[!item.deleted]]">
+              <span hidden>[[item]]</span>
+              <paper-icon-button icon="icons:delete" on-click="_deleteDialog"></paper-icon-button>
+            </template>
+          </td>
+        </tr>
+      </template>
+    </table>
+    <paper-input pager type="number" value="{{page}}" label="Page" min="0"></paper-input>
+
+  </template>
+  <script>
+    /** @polymerElement */
+    class ModelTable extends EditorMixin(Polymer.Element) {
+
+      static get is() {
+        return 'model-table';
+      }
+
+      static get properties() {
+        return {
+          models: {
+            type: Object,
+            value: () => models
+          },
+          page: {
+            type: Number,
+            value: 0
+          },
+          limit: {
+            type: Number,
+            value: 30
+          },
+          where: {
+            type: Object,
+            value: {}
+          }
+        };
+      }
+
+      static get observers() {
+        return ['_filter(page, where.*)']
+      }
+
+      async _filter() {
+        this.items = await this._model.read(this.where, { limit: this.limit, skip: this.limit * this.page });
+      }
+
+      _header(field) {
+        return this.models[this.model].schema.getField(field).label;
+      }
+
+      _field(item, field) {
+        return _.get(item, field);
+      }
+
+      _fieldTitle(item) {
+        return item.name || item.shortname || item.shortName || item.short_name || item.fullname || item.fullName || item.full_name || item.title || item.text || item.value || item._id;
+      }
+
+      connectedCallback() {
+        super.connectedCallback();
+        let model = this.models[this.model];
+        this.header = model.schema.table && model.schema.table.header || [];
+        this.filters = model.schema.table && model.schema.table.filters || [];
+      }
+    }
+
+    window.customElements.define(ModelTable.is, ModelTable);
+  </script>
+</dom-module>

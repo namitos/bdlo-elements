@@ -1,0 +1,82 @@
+<link rel="import" href="../../iron-form/iron-form.html">
+<link rel="import" href="../../ui-elements/ui-dialog/ui-dialog.html">
+<link rel="import" href="../model-form.html">
+
+<script>
+  window.EditorMixin = (base) => class extends base {
+    get _model() {
+      return this.models[this.model];
+    }
+
+    _modalForm({ schema, value, submit, title = 'Edit document' }) {
+      let win = Object.assign(document.createElement('ui-dialog'), {
+        title: title
+      });
+      let form = Object.assign(document.createElement('model-form'), {
+        schema,
+        value,
+        submit: (e) => {
+          submit(e);
+          win.close();
+        }
+      });
+      win.appendChild(form);
+      document.body.appendChild(win);
+      win.open();
+      return win;
+    }
+
+    async _addDialog() {
+      let item = new this._model(this.newItemFn instanceof Function ? this.newItemFn() : {});
+      this._modalForm({
+        schema: this._model.schema,
+        value: item,
+        submit: async() => {
+          await item.save();
+          this.push('items', item);
+          util.notify('Document added');
+        }
+      })
+    };
+
+    async _editDialog(e) {
+      let item = e.model.item;
+      if (this.header && this.header.length) {
+        [item] = await this._model.read({
+          _id: item._id
+        });
+      }
+      this._modalForm({
+        schema: this._model.schema,
+        value: item,
+        submit: async() => {
+          await item.save();
+          this.items[this.items.indexOf(e.model.item)] = item;
+          this.notifyPath(`items.${this.items.indexOf(item)}`);
+          util.notify('Document saved');
+        }
+      })
+    }
+
+    async _deleteDialog(e) {
+      let item = e.model.item;
+      if (this._model.schema.safeDelete) {
+        await item.delete();
+        util.notify('Document archived');
+        this.set(['items', this.items.indexOf(item), 'deleted'], true);
+      } else if (confirm('Are you sure?')) {
+        await item.delete();
+        util.notify('Document deleted');
+        this.splice('items', this.items.indexOf(item), 1);
+      }
+    }
+
+    async _undoDialog(e) {
+      let item = e.model.item;
+      item.deleted = false;
+      await item.save();
+      util.notify('Document restored');
+      this.set(['items', this.items.indexOf(item), 'deleted'], false);
+    }
+  }
+</script>

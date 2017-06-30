@@ -1,0 +1,111 @@
+<link rel="import" href="../iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="../paper-styles/color.html">
+<link rel="import" href="../paper-styles/shadow.html">
+<link rel="import" href="../paper-styles/typography.html">
+
+<dom-module id="model-styles">
+  <template>
+    <style>
+       :host {
+        display: block;
+        position: relative;
+        @apply --paper-font-common-base;
+      }
+
+      button[nostyle] {
+        -webkit-appearance: none;
+        border: 0;
+        padding: 0;
+        background: 0 0;
+        font-size: 100%;
+        vertical-align: middle;
+        height: auto !important;
+      }
+
+      button[nostyle] paper-button {
+        margin: 0;
+      }
+
+      paper-button {
+        background: var(--paper-yellow-800);
+        color: #fff;
+        margin-left: 0;
+      }
+
+      paper-fab {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        background: var(--paper-yellow-800);
+      }
+      /** Msg **************************************************************/
+
+      .msg {
+        border-radius: 2px;
+        margin: 0 0 16px 0;
+        padding: 8px;
+        font-size: 13px;
+      }
+
+      .msg.warn {
+        background: var(--paper-red-600);
+        color: #fff;
+      }
+
+      .msg.info {
+        background: var(--paper-grey-500);
+        color: #fff;
+      }
+      /** Msg **************************************************************/
+      /** Tables **************************************************************/
+
+      table.table {
+        width: 100%;
+        border-spacing: 0;
+        border-collapse: seperate;
+        border-radius: 2px;
+        overflow: hidden;
+        background: #fff;
+        @apply --shadow-elevation-2dp;
+      }
+
+      table.table th {
+        font-size: 12px;
+        font-weight: 500;
+        text-align: left;
+        height: 56px;
+        padding: 0 12px;
+        color: rgba(0, 0, 0, .54);
+      }
+
+      table.table tr {
+        height: 48px;
+      }
+
+      table.table tr:hover {
+        background: rgba(0, 0, 0, 0.02);
+      }
+
+      table.table tr td {
+        font-size: 13px;
+        padding: 0 12px;
+        border-top: 1px solid var(--paper-grey-300);
+      }
+
+      table.table tr td .small {
+        font-size: 10px;
+        color: var(--paper-grey-400);
+      }
+
+      table.table tr td.buttons {
+        width: 1%;
+        white-space: nowrap;
+      }
+
+      table.table [numeric] {
+        text-align: right;
+      }
+      /** Tables **************************************************************/
+    </style>
+  </template>
+</dom-module>

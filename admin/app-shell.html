@@ -1,0 +1,147 @@
+<link rel="import" href="../../polymer/polymer-element.html">
+<link rel="import" href="../../polymer/lib/elements/dom-if.html">
+<link rel="import" href="../../polymer/lib/elements/dom-repeat.html">
+
+<link rel="import" href="../../app-layout/app-drawer-layout/app-drawer-layout.html">
+<link rel="import" href="../../app-layout/app-drawer/app-drawer.html">
+<link rel="import" href="../../app-layout/app-header-layout/app-header-layout.html">
+<link rel="import" href="../../app-layout/app-header/app-header.html">
+<link rel="import" href="../../app-layout/app-toolbar/app-toolbar.html">
+<link rel="import" href="../../app-layout/app-scroll-effects/effects/waterfall.html">
+<link rel="import" href="../../app-route/app-location.html">
+<link rel="import" href="../../paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../../paper-item/paper-item.html">
+<link rel="import" href="../../iron-icons/iron-icons.html">
+<link rel="import" href="../../ui-elements/mixins/utils-mixin.html">
+
+<link rel="import" href="../model-elements.html">
+<link rel="import" href="../model-table.html">
+
+<dom-module id="app-shell">
+  <template>
+    <style include="model-styles">
+      app-drawer-layout:not([narrow]) [drawer-toggle] {
+        display: none;
+      }
+
+      app-drawer {
+        --app-drawer-content-container: {
+          background: var(--paper-grey-900);
+          overflow-y: auto;
+        }
+      }
+
+      app-drawer a {
+        color: var(--paper-blue-grey-50);
+        text-decoration: none;
+      }
+
+      app-toolbar {
+        background: var(--paper-blue-500);
+        color: #fff;
+      }
+
+      #content {
+        padding: 16px;
+      }
+    </style>
+
+    <app-location route="{{route}}" use-hash-as-path></app-location>
+    <app-drawer-layout fullbleed>
+      <app-drawer id="drawer" swipe-open slot="drawer">
+        <template is="dom-repeat" items="[[menuModels]]">
+          <a href="#models/[[item]]">
+            <paper-item>[[item]]</paper-item>
+          </a>
+        </template>
+      </app-drawer>
+      <app-header-layout fullbleed>
+        <app-header fixed effects="waterfall" slot="header">
+          <app-toolbar>
+            <paper-icon-button icon="menu" drawer-toggle></paper-icon-button>
+            <div main-title>[[title]]</div>
+            <nav>
+            </nav>
+          </app-toolbar>
+        </app-header>
+        <template is="dom-if" if="[[!user._id]]">
+          <user-login></user-login>
+        </template>
+        <div id="content"></div>
+      </app-header-layout>
+    </app-drawer-layout>
+  </template>
+  <script>
+    /** @polymerElement */
+    class AppShell extends UtilsMixin(Polymer.Element) {
+
+      static get is() {
+        return 'app-shell';
+      }
+
+      static get properties() {
+        return {
+          user: {
+            type: models.User,
+            value: () => user
+          },
+          models: {
+            type: Object,
+            value: () => models
+          },
+          title: {
+            type: String,
+            value: 'Admin'
+          }
+        };
+      }
+
+      static get observers() {
+        return ["_changeRoute(route.*)"]
+      }
+
+      connectedCallback() {
+        super.connectedCallback();
+        this.menuModels = Object.keys(this.models).filter((model) => this._permission(`${model} write`) && this.models[model].schema);
+
+        window.appShell = this;
+        this.router = new Router({
+          "": () => {
+            this.setContent({
+              title: "Welcome",
+              el: document.createElement("div")
+            });
+          },
+          'models/:model': (params) => {
+            this.setContent({
+              title: this.models[params.model].schema.name,
+              el: Object.assign(document.createElement('model-table'), { model: params.model })
+            })
+          }
+        });
+        this._changeRoute();
+      }
+
+      setContent(data) {
+        this.title = data.title;
+        this.$.content.innerHTML = '';
+        this.$.content.appendChild(data.el);
+        this.closeDrawer();
+      }
+
+      closeDrawer() {
+        if (document.body.clientWidth <= this.responsiveWidth) {
+          this.$.drawer.close();
+        }
+      }
+
+      _changeRoute() {
+        if (this.router) {
+          this.router.page(this.route.path);
+        }
+      }
+    }
+
+    window.customElements.define(AppShell.is, AppShell);
+  </script>
+</dom-module>
