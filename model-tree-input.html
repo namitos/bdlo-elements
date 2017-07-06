@@ -1,0 +1,74 @@
+<link rel="import" href="../polymer/polymer-element.html">
+<link rel="import" href="../polymer/lib/elements/dom-if.html">
+<link rel="import" href="../polymer/lib/elements/dom-repeat.html">
+<link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="../ui-elements/ui-dialog/ui-dialog.html">
+<link rel="import" href="./model-tree.html">
+
+<dom-module id="model-tree-input">
+  <template>
+    <style></style>
+    <paper-input id="input" value="[[_value]]" label="[[label]]" required="[[required]]" readonly on-click="select"></paper-input>
+  </template>
+  <script>
+    /** @polymerElement */
+    class ModelTreeInput extends Polymer.Element {
+
+      static get is() {
+        return 'model-tree-input';
+      }
+
+      static get properties() {
+        return {
+          model: String,
+          required: Boolean,
+          label: String,
+          _value: String,
+          value: {
+            type: String,
+            notify: true
+          },
+        };
+      }
+
+      select() {
+        this.win.open();
+      }
+
+      connectedCallback() {
+        super.connectedCallback();
+        let win = util.dom.el('ui-dialog', {
+          title: this.label,
+          removeAfterHide: false
+        }, [
+          util.dom.el('model-tree', {
+            selectAnyBranch: this.selectAnyBranch,
+            model: this.model,
+            value: this.value,
+            selectedValue: (treeValue) => {
+              if (treeValue instanceof models[this.model]) {
+                //input.treeValue = treeValue._id;
+                if (treeValue.parentObj) {
+                  this.$.input.value = [treeValue.parentObj.title, treeValue.title].join(' > ');
+                } else {
+                  this.$.input.value = treeValue.title;
+                }
+                this.value = treeValue._id;
+                win.close();
+              } else { //TODO тут может возвращаться не один объект и это надо предусмотреть
+                console.error('implement!', treeValue);
+              }
+            }
+          })
+        ]);
+
+        this.win = win;
+        document.body.appendChild(win); //todo remove element on detach
+      }
+
+    }
+
+
+    window.customElements.define(ModelTreeInput.is, ModelTreeInput);
+  </script>
+</dom-module>
