@@ -1,0 +1,166 @@
+<link rel="import" href="../paper-spinner/paper-spinner.html">
+
+<link rel="import" href="./mixins/tree-mixin.html">
+<link rel="import" href="model-tree-styles.html">
+
+<dom-module id='model-tree'>
+  <template>
+    <style include="model-tree-styles"></style>
+
+    <div id="wrapper" edit-mode$="[[editMode]]">
+      <template is="dom-if" if="[[!branches.length]]">
+        <paper-spinner active></paper-spinner>
+      </template>
+      <div class="branches">
+        <template is="dom-if" if="[[branches.length]]">
+          <template is="dom-repeat" items="{{branches}}" as="branch" index-as="branchNum">
+            <div class="branch">
+              <template is="dom-if" if="[[editMode]]">
+                <span hidden>[[branch]]</span>
+                <div class="item add">
+                  <iron-icon icon="icons:add" tip="Добавить ветку" on-click="_addDialog"></iron-icon>
+                </div>
+              </template>
+              <template is="dom-repeat" items="{{_branchGroup(branch, branchNum)}}">
+                <div class="group">[[item.key]]</div>
+                <template is="dom-repeat" items="{{item.items}}">
+                  <div class="item">
+                    <span hidden>[[branchNum]]</span>
+                    <span hidden>[[item._id]]</span>
+                    <a on-click="loadBranchClick" selected$="{{item.selected}}" tabindex="1"><span>[[item.title]]</span></a>
+                    <div class="icons">
+                      <template is="dom-if" if="[[selectAnyBranch]]">
+                        <span hidden>[[item]]</span>
+                        <iron-icon icon="done-all" tip="Выбрать весь раздел" on-click="selectBranch"></iron-icon>
+                      </template>
+                      <template is="dom-if" if="[[editMode]]">
+                        <span hidden>[[item]]</span>
+                        <iron-icon icon="icons:create" tip="Редактировать" on-click="_editDialog"></iron-icon>
+                        <iron-icon icon="icons:clear" tip="Удалить" on-click="_deleteDialog"></iron-icon>
+                      </template>
+                    </div>
+                  </div>
+                </template>
+              </template>
+            </div>
+          </template>
+        </template>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    /** @polymerElement */
+    class ModelTree extends TreeMixin(EditorMixin(Polymer.Element)) {
+      static get is() {
+        return "model-tree"
+      }
+
+      static get properties() {
+        return {
+          models: {
+            type: Object,
+            value: () => models
+          },
+          editMode: {
+            type: Boolean,
+            value: false
+          },
+          branches: {
+            type: Array,
+            value: () => []
+          }
+        }
+      }
+
+      connectedCallback() {
+        super.connectedCallback();
+
+        this.selectedValue = this.selectedValue || function(item) {
+          console.log(item, 'заглушка для selectedValue');
+        };
+        this._loadBranchesFn(this.value);
+      }
+
+      selectBranch(e) {
+        this.selectedValue(e.model.item);
+      }
+
+      async loadBranchClick(e) {
+        if (!this.loading) {
+          this.loading = true;
+          try {
+            let parent = e.model.item._id;
+            let result = await this._loadBranchFn(parent);
+            var branchesLength = this.branches.length;
+            var branchNum = e.model.branchNum + 1;
+            for (var i = 0; i < branchesLength - branchNum; ++i) {
+              this.pop('branches');
+            }
+            this.loading = false;
+
+            result.parent = e.model.item;
+            result.forEach((item) => {
+              item.parentObj = e.model.item;
+            });
+
+            if (result.length || this.editMode) {
+              this.push('branches', result);
+              setTimeout(() => {
+                this.$.wrapper.scrollLeft = 2000;
+              }, 100);
+            } else {
+              this.selectedValue(e.model.item); //метод, который вызывается, когда выбрано одно или несколько значений
+            }
+          } catch (err) {
+            console.error(err);
+            this.loading = false;
+          }
+        }
+      }
+
+
+      async _addDialog() {
+        let item = new this._model(this.newItemFn instanceof Function ? this.newItemFn() : {});
+        this._modalForm({
+          schema: this._model.schema,
+          value: item,
+          submit: async() => {
+            await item.save();
+            this._loadBranchesFn(item._id);
+            util.notify('Branch added');
+          }
+        })
+      }
+
+      async _deleteDialog(e) {
+        let item = e.model.item;
+        if (confirm('Are you sure?')) {
+          let branches = await this._loadBranchFn(item._id);
+          if (branches.length) {
+            util.notify('The branch has child elements. Delete them first.');
+          } else {
+            await item.delete();
+            this._loadBranchesFn(item.parent);
+            util.notify('Branch deleted');
+          }
+        }
+      }
+
+      async _editDialog(e) {
+        let item = e.model.item;
+        this._modalForm({
+          schema: this._model.schema,
+          value: item,
+          submit: async() => {
+            await item.save();
+            this._loadBranchesFn(item._id);
+            util.notify('Branch saved');
+          }
+        })
+      }
+    }
+
+    window.customElements.define(ModelTree.is, ModelTree);
+  </script>
+</dom-module>

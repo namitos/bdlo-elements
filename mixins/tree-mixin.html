@@ -1,0 +1,76 @@
+<script>
+  window.TreeMixin = (base) => {
+    return class extends base {
+      _branchGroup(branch, branchNum) {
+        let alphabetKey = true;
+        //var alphabetKey = branchNum < 2 && this._model === window.models.Geo;
+        var groups = branch.groupBy((item) => {
+          if (alphabetKey) {
+            return item.title.substr(0, 1);
+          } else {
+            return item.type ? item.type : '';
+          }
+        });
+        var result = [];
+        Object.keys(groups).forEach((groupKey) => {
+          var key = groupKey;
+          if (!alphabetKey) {
+            if (this._model.schema.properties.type && this._model.schema.properties.type.widget == 'select') {
+              key = this._model.schema.properties.type.options[groupKey];
+            }
+          }
+
+          result.push({
+            key: key,
+            items: groups[groupKey]
+          });
+        });
+        return result;
+      }
+
+      async _loadBranchFn(parent) {
+        let where;
+        if (parent) {
+          where = { parent: parent };
+        } else {
+          where = { $or: [{ parent: { $exists: false } }, { parent: '' }] }
+        }
+        return this._model.read(where, { sort: { title: 1 } });
+      }
+
+      _computeBranchHeight() {
+        var controlsHeight = 195;
+        return 'height:' + (window.innerHeight - controlsHeight) + 'px';
+      }
+
+      /**
+       * загружает несколько столбцов по бредкрамбу
+       * @param parent
+       */
+      async _loadBranchesFn(parent) {
+        let breadcrumb = await this._model.breadcrumb(parent);
+        let parentIds = breadcrumb.map((item) => item.parent);
+        if (!parentIds.length) {
+          parentIds.push(''); //чтоб в случае пустого бредкрамба подгружался самый верхний уровень
+        }
+        /* else {
+         parentIds.push(breadcrumb[breadcrumb.length - 1]._id);
+        }*/
+        let branches = await Promise.all(parentIds.map((parent) => this._loadBranchFn(parent)));
+        branches.forEach((branches, i) => {
+          if (i > 0) { //для нулевой вложенности родителя нет, потому и не откуда его брать
+            branches.parent = breadcrumb[i - 1];
+          }
+          branches.forEach((item) => { //сохраняем каждому элементу его уровень вложенности
+            item.branchNum = i;
+          });
+        });
+        this.set('breadcrumb', breadcrumb); //нужно только для предзагрузки
+        this.set('branches', branches);
+        setTimeout(() => {
+          this.$.wrapper.scrollLeft = 2000;
+        }, 100);
+      }
+    }
+  };
+</script>

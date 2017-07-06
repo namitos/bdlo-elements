@@ -225,11 +225,20 @@ window.init = () => {
     window.schemas = init.schemas;
     for (let key in schemas) {
       if (!models[key]) {
-        models[key] = class extends models.Model {
-          static get schema() {
-            return schemas[key];
+        if (schemas[key].tree) {
+          models[key] = class extends models.Tree {
+            static get schema() {
+              return schemas[key];
+            }
+          }
+        } else {
+          models[key] = class extends models.Model {
+            static get schema() {
+              return schemas[key];
+            }
           }
         }
+
       }
     }
     window.user = new models.User(init.user);

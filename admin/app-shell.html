@@ -16,6 +16,7 @@
 
 <link rel="import" href="../model-elements.html">
 <link rel="import" href="../model-table.html">
+<link rel="import" href="../model-tree.html">
 
 <dom-module id="app-shell">
   <template>
@@ -113,9 +114,10 @@
             });
           },
           'models/:model': (params) => {
+            let model = this.models[params.model];
             this.setContent({
-              title: this.models[params.model].schema.name,
-              el: Object.assign(document.createElement('model-table'), { model: params.model })
+              title: model.schema.name,
+              el: Object.assign(document.createElement(model.schema.tree ? 'model-tree' : 'model-table'), { model: params.model, editMode: true })
             })
           }
         });
