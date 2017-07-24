@@ -69,7 +69,7 @@ models.Model = class Model {
 
   static read(where = {}, options, connections) {
     where.deleted = where.deleted || {
-      $nin: [true]
+      $ne: true
     };
     return this.sync(this.schema.name, 'read', {}, where, options, connections).then((loaded) => loaded.map((obj) => {
       let item = new this(obj);
