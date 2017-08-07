@@ -68,9 +68,11 @@ models.Model = class Model {
   }
 
   static read(where = {}, options, connections) {
-    where.deleted = where.deleted || {
-      $ne: true
-    };
+    if (this.schema.safeDelete && !where.hasOwnProperty('deleted')) {
+      where.deleted = {
+        $ne: true
+      };
+    }
     return this.sync(this.schema.name, 'read', {}, where, options, connections).then((loaded) => loaded.map((obj) => {
       let item = new this(obj);
       ['connections', 'breadcrumbs'].forEach((key) => {
@@ -93,14 +95,7 @@ models.Model = class Model {
   static sync(collection, method, data, where, options, connections) {
     //if (socket.connected) {
     return new Promise((resolve, reject) => {
-      let toSend = {
-        collection: collection,
-        data: data,
-        where: where,
-        options: options,
-        connections: connections
-      };
-      this.transport.emit('data:' + method, toSend, (data) => {
+      this.transport.emit('data:' + method, { collection, data, where, options, connections }, (data) => {
         if (data.hasOwnProperty('error')) {
           reject(data.error);
         } else {
