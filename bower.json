@@ -1,6 +1,6 @@
 {
-  "name": "bdlo-elements",
-  "main": "bdlo-elements.html",
+  "name": "model-elements",
+  "main": "model-elements.html",
   "dependencies": {
     "ui-elements": "namitos/ui-elements",
     "socket.io-client": "socketio/socket.io-client"
