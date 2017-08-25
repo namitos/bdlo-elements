@@ -95,13 +95,7 @@ models.Model = class Model {
   static sync(collection, method, data, where, options, connections) {
     //if (socket.connected) {
     return new Promise((resolve, reject) => {
-      this.transport.emit('data:' + method, {
-        collection,
-        data,
-        where,
-        options,
-        connections
-      }, (data) => {
+      this.transport.emit('data:' + method, { collection, data, where, options, connections }, (data) => {
         if (data.hasOwnProperty('error')) {
           reject(data.error);
         } else {
@@ -218,7 +212,7 @@ window.init = () => {
       credentials: 'include'
     }).then((response) => response.json()),
     new Promise((resolve, reject) => {
-      document.addEventListener('WebComponentsReady', () => resolve());
+      window.wcPolyfill ? document.addEventListener('WebComponentsReady', () => resolve()) : resolve();
     })
   ]).then(([init]) => {
     Object.keys(init.schemas).forEach((key) => init.schemas[key] = new models.Schema(init.schemas[key]));
