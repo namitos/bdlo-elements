@@ -10,7 +10,7 @@
     <style include="model-styles"></style>
     <iron-form>
       <form on-submit="_submit">
-        <fc-object schema="[[schema]]" value="[[value]]"></fc-object>
+        <fc-object schema="[[schema]]" value="{{value}}"></fc-object>
         <button nostyle><paper-button>Save</paper-button></button>
       </form>
     </iron-form>
@@ -24,13 +24,20 @@
       }
 
       static get properties() {
-        return {};
+        return {
+          value: {
+            notify: true
+          }
+        };
       }
 
       _submit(e) {
         e.preventDefault();
         if (e.target.parentNode.validate()) {
-          this.submit(e);
+          if (this.submit) {
+            this.submit(e);
+          }
+          this.dispatchEvent(new CustomEvent('model-form-submit', { bubbles: true, composed: true }));
         }
       }
     }
