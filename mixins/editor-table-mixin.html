@@ -1,0 +1,54 @@
+<link rel="import" href="./editor-mixin.html">
+
+<script>
+  window.EditorTableMixin = (base) => class extends EditorMixin(base) {
+    static get properties() {
+      return {
+        models: {
+          type: Object,
+          value: () => models
+        },
+        page: {
+          type: Number,
+          value: 0
+        },
+        limit: {
+          type: Number,
+          value: 30
+        },
+        where: {
+          type: Object,
+          value: {}
+        }
+      };
+    }
+
+    static get observers() {
+      return ['_filter(page, where.*)']
+    }
+
+    _filterInput(e) {
+      let { name, value } = e.target;
+      let fieldSchema = this._model.schema.properties[name];
+      if (value) {
+        if (fieldSchema.type === 'string') {
+          this.where[name] = {
+            $regex: value,
+            $options: 'i'
+          }
+        }
+      } else {
+        delete this.where[name];
+      }
+      this._filter();
+    }
+
+    async _filter() {
+      this.page = parseInt(this.page);
+      if (typeof this.page === 'number' && this.where) {
+        this.items = await this._model.read(this.where, { limit: this.limit, skip: this.limit * this.page });
+      }
+    }
+
+  }
+</script>
