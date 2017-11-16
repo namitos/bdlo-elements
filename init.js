@@ -40,13 +40,35 @@ models.Model = class Model {
         });
       });
     }
+
+    if (this.constructor.schema.sendOnlyUpdates) {
+      let value = Object.assign({}, this);
+      Object.keys(value).forEach((prop) => {
+        if (value[prop] instanceof Object) {
+          value[prop] = JSON.stringify(value[prop]);
+        }
+      })
+      Object.defineProperty(this, '_initial', { value })
+    }
   }
 
   toJSON() {
-    let result = {};
-    Object.keys(this).forEach((prop) => {
-      result[prop] = this[prop];
-    });
+    let result = { _id: this._id };
+    if (this.constructor.schema.sendOnlyUpdates) {
+      Object.keys(this).forEach((prop) => {
+        if (this[prop] instanceof Object) {
+          if (JSON.stringify(this[prop]) !== this._initial[prop]) {
+            result[prop] = this[prop];
+          }
+        } else {
+          if (this[prop] !== this._initial[prop]) {
+            result[prop] = this[prop];
+          }
+        }
+      });
+    } else {
+      result = Object.assign(result, this);
+    }
     return result;
   }
 
@@ -56,9 +78,7 @@ models.Model = class Model {
       this._id ? 'update' : 'create',
       this.toJSON()
     ).then((result) => {
-      Object.keys(result).forEach((key) => {
-        this[key] = result[key];
-      });
+      Object.assign(this, result);
       return this;
     });
   }
