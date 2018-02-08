@@ -7,5 +7,9 @@
   },
   "devDependencies": {
     "web-component-tester": "^6.0.0"
+  },
+  "resolutions": {
+    "iron-resizable-behavior": "1 - 2",
+    "iron-selector": "1 - 2"
   }
 }
