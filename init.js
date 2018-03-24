@@ -283,10 +283,9 @@
   });
 
 })()
-
 window.init = () => {
   return Promise.all([
-    fetch('/init', {
+    fetch(`${window.apiHost ? window.apiHost : ''}/init`, {
       credentials: 'include'
     }).then((response) => response.json()),
     new Promise((resolve, reject) => {
@@ -313,9 +312,7 @@ window.init = () => {
       }
     }
     window.user = new models.User(init.user);
-    window.socket = io();
+    window.socket = io(window.apiHost ? window.apiHost : '');
     return init;
-  }).catch((err) => {
-    console.error(err);
   });
 }
