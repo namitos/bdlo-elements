@@ -1,6 +1,7 @@
 <link rel="import" href="../paper-spinner/paper-spinner.html">
 
 <link rel="import" href="./mixins/tree-mixin.html">
+<link rel="import" href="./mixins/editor-mixin.html">
 <link rel="import" href="model-tree-styles.html">
 
 <dom-module id='model-tree'>
@@ -58,6 +59,9 @@
 
       static get properties() {
         return {
+          model: {
+            type: String
+          },
           models: {
             type: Object,
             value: () => models
@@ -125,7 +129,7 @@
         this._modalForm({
           schema: this._model.schema,
           value: item,
-          submit: async() => {
+          submit: async () => {
             await item.save();
             this._loadBranchesFn(item._id);
             util.notify('Branch added');
@@ -152,7 +156,7 @@
         this._modalForm({
           schema: this._model.schema,
           value: item,
-          submit: async() => {
+          submit: async () => {
             await item.save();
             this._loadBranchesFn(item._id);
             util.notify('Branch saved');
