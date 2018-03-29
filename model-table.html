@@ -10,18 +10,7 @@
 
 <dom-module id="model-table">
   <template>
-    <style include="model-styles">
-      paper-fab {
-        position: fixed;
-        right: 24px;
-        bottom: 24px;
-        z-index: 1;
-      }
-
-      [pager] {
-        width: 50px;
-      }
-    </style>
+    <style include="model-styles"></style>
 
     <paper-fab icon="icons:add" title="Добавить" on-click="_addDialog"></paper-fab>
     <paper-input pager type="number" value="{{page}}" label="Page" min="0"></paper-input>
