@@ -6,7 +6,7 @@
 <dom-module id="model-styles">
   <template>
     <style>
-       :host {
+      :host {
         display: block;
         position: relative;
         @apply --paper-font-common-base;
@@ -36,8 +36,20 @@
         position: fixed;
         bottom: 24px;
         right: 24px;
+        z-index: 1;
         background: var(--paper-yellow-800);
       }
+
+      [pager] {
+        width: 50px;
+      }
+
+      .filter-form paper-input {
+        width: 200px;
+        display: inline-block;
+        margin: 0 16px 0 0;
+      }
+
       /** Msg **************************************************************/
 
       .msg {
@@ -56,7 +68,9 @@
         background: var(--paper-grey-500);
         color: #fff;
       }
+
       /** Msg **************************************************************/
+
       /** Tables **************************************************************/
 
       table.table {
@@ -105,6 +119,7 @@
       table.table [numeric] {
         text-align: right;
       }
+
       /** Tables **************************************************************/
     </style>
   </template>
