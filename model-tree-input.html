@@ -37,31 +37,35 @@
 
       connectedCallback() {
         super.connectedCallback();
-        let win = util.dom.el('ui-dialog', {
+        if (this.value) {
+          models[this.model].read({ _id: this.value }).then(([item]) => {
+            this._value = item.title;
+          }).catch((err) => console.log(err))
+        }
+
+        let win = Object.assign(document.createElement('ui-dialog'), {
           title: this.label,
           removeAfterHide: false
-        }, [
-          util.dom.el('model-tree', {
-            selectAnyBranch: this.selectAnyBranch,
-            model: this.model,
-            value: this.value,
-            selectedValue: (treeValue) => {
-              if (treeValue instanceof models[this.model]) {
-                //input.treeValue = treeValue._id;
-                if (treeValue.parentObj) {
-                  this.$.input.value = [treeValue.parentObj.title, treeValue.title].join(' > ');
-                } else {
-                  this.$.input.value = treeValue.title;
-                }
-                this.value = treeValue._id;
-                win.close();
-              } else { //TODO тут может возвращаться не один объект и это надо предусмотреть
-                console.error('implement!', treeValue);
+        });
+        win.appendChild(Object.assign(document.createElement('model-tree'), {
+          selectAnyBranch: this.selectAnyBranch,
+          model: this.model,
+          value: this.value,
+          selectedValue: (treeValue) => {
+            if (treeValue instanceof models[this.model]) {
+              //input.treeValue = treeValue._id;
+              if (treeValue.parentObj) {
+                this.$.input.value = [treeValue.parentObj.title, treeValue.title].join(' > ');
+              } else {
+                this.$.input.value = treeValue.title;
               }
+              this.value = treeValue._id;
+              win.close();
+            } else { //TODO тут может возвращаться не один объект и это надо предусмотреть
+              console.error('implement!', treeValue);
             }
-          })
-        ]);
-
+          }
+        }));
         this.win = win;
         document.body.appendChild(win); //todo remove element on detach
       }
