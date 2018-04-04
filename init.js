@@ -83,10 +83,7 @@
   };
 
 
-
-  let models = {};
-
-  models.Model = class Model {
+  class _Model {
     constructor(properties = {}, options) {
       Object.assign(this, properties);
       if (options) {
@@ -128,48 +125,56 @@
       return result;
     }
 
-    save() {
-      return this.constructor.sync(
-        this.constructor.schema.name,
-        this._id ? 'update' : 'create',
-        this.toJSON()
-      ).then((result) => {
-        Object.assign(this, result);
-        return this;
-      });
+    static get schema() {}
+  }
+
+  let models = {};
+  let crud = new HttpTransport(`${window.apiHost ? window.apiHost : ''}/api/crud`);
+
+  models.Model = class Model extends _Model {
+    async save() {
+      let r;
+      if (this._id) {
+        r = await crud.u(`${this.constructor.schema.name}`, this);
+      } else {
+        r = await crud.c(`${this.constructor.schema.name}`, this);
+      }
+      Object.assign(this, r);
+      return this;
     }
 
-    'delete' () {
-      return this.constructor.sync(this.constructor.schema.name, 'delete', this.toJSON());
+    async 'delete' () {
+      return crud.d(`${this.constructor.schema.name}/${this._id}`);
     }
 
-    static read(where = {}, options, connections) {
+    static async read(where = {}, options) {
       if (this.schema.safeDelete && !where.hasOwnProperty('deleted')) {
         where.deleted = {
           $ne: true
         };
       }
-      return this.sync(this.schema.name, 'read', {}, where, options, connections).then((loaded) => loaded.map((obj) => {
+      let items = await crud.r(`${this.schema.name}`, { where, options });
+      return items.map((obj) => {
         let item = new this(obj);
         ['connections', 'breadcrumbs'].forEach((key) => {
           if (item[key]) {
             let value = item[key];
             delete item[key];
-            Object.defineProperty(item, key, {
-              value: value
-            });
+            Object.defineProperty(item, key, { value });
           }
         });
         return item;
-      }));
+      })
     }
 
-    static count(where) {
-      return this.sync(this.schema.name, 'count', {}, where);
+    static async count(where = {}) {
+      let r = await crud.r(`${this.schema.name}`, { where, count: true });
+      return r.itemsCount;
     }
 
+
+    //@deprecated
     static sync(collection, method, data, where, options, connections) {
-      //if (socket.connected) {
       return new Promise((resolve, reject) => {
         this.transport.emit('data:' + method, { collection, data, where, options, connections }, (data) => {
           if (data.hasOwnProperty('error')) {
@@ -179,21 +184,18 @@
           }
         });
       });
-      //} else {
-      //  return Promise.reject("socket disconnected");
-      //}
     }
+
+    //@deprecated
     static get transport() {
       return window.socket;
     }
-    static get schema() {}
   };
 
   models.Tree = class Tree extends models.Model {
-    static breadcrumb(id) {
-      return this.sync(this.schema.name, 'breadcrumb', {}, {
-        _id: id
-      }).then((loaded) => loaded.map((obj) => {
+    static async breadcrumb(id) {
+      let items = crud.r(`${this.schema.name}/breadcrumb/${id}`);
+      return items.map((obj) => {
         let item = new this(obj);
         if (item.connections) {
           let connections = item.connections;
@@ -203,9 +205,12 @@
           });
         }
         return item;
-      }));
+      })
     }
   };
+
+
+
 
   models.User = class User extends models.Model {
     static get schema() {
