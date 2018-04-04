@@ -194,6 +194,7 @@
 
   models.Tree = class Tree extends models.Model {
     static async breadcrumb(id) {
+      if (!id) { return [] }
       let items = await crud.r(`${this.schema.name}/breadcrumb/${id}`);
       return items.map((obj) => {
         let item = new this(obj);
@@ -208,8 +209,6 @@
       })
     }
   };
-
-
 
 
   models.User = class User extends models.Model {
