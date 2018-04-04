@@ -194,7 +194,7 @@
 
   models.Tree = class Tree extends models.Model {
     static async breadcrumb(id) {
-      let items = crud.r(`${this.schema.name}/breadcrumb/${id}`);
+      let items = await crud.r(`${this.schema.name}/breadcrumb/${id}`);
       return items.map((obj) => {
         let item = new this(obj);
         if (item.connections) {
