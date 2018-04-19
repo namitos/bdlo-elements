@@ -316,7 +316,9 @@ window.init = () => {
       }
     }
     window.user = new models.User(init.user);
-    window.socket = io(window.apiHost ? window.apiHost : '');
+    try {
+      window.socket = io(window.apiHost ? window.apiHost : '');
+    } catch(err) { console.warn(err); }
     return init;
   });
 }
