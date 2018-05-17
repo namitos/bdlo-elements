@@ -17,7 +17,6 @@
 <link rel="import" href="../../ui-elements/ui-select/ui-select.html">
 <link rel="import" href="../../ui-elements/ui-multiselect/ui-multiselect.html">
 <link rel="import" href="../../ui-elements/ui-input-code/ui-input-code.html">
-<link rel="import" href="../../ui-elements/ui-input-image/ui-input-image.html">
 
 <link rel="import" href="../model-elements.html">
 <link rel="import" href="../model-tree-input.html">
@@ -49,6 +48,12 @@
       #content {
         padding: 16px;
       }
+
+      ui-dialog {
+        --ui-dialog-paper-dialog: {
+          width: 90%;
+        }
+      }
     </style>
 
     <app-location route="{{route}}" use-hash-as-path></app-location>
@@ -75,6 +80,7 @@
         <div id="content"></div>
       </app-header-layout>
     </app-drawer-layout>
+    <div id="tmp"></div>
   </template>
   <script>
     /** @polymerElement */
