@@ -21,7 +21,8 @@
         }
       });
       win.appendChild(form);
-      document.body.appendChild(win);
+      let wrapper = window.appShell && window.appShell.$.tmp || document.body;
+      wrapper.appendChild(win);
       win.open();
       return win;
     }
@@ -31,7 +32,7 @@
       this._modalForm({
         schema: this._model.schema,
         value: item,
-        submit: async() => {
+        submit: async () => {
           await item.save();
           this.push('items', item);
           util.notify('Document added');
@@ -49,7 +50,7 @@
       this._modalForm({
         schema: this._model.schema,
         value: item,
-        submit: async() => {
+        submit: async () => {
           await item.save();
           this.items[this.items.indexOf(e.model.item)] = item;
           this.notifyPath(`items.${this.items.indexOf(item)}`);
