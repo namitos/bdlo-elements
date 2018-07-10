@@ -58,7 +58,7 @@
       }).then(this.status)
     }
     async r(url, where = {}) {
-      return fetch(`${this.endpoint}/${url}?q=${JSON.stringify(where)}`, {
+      return fetch(`${this.endpoint}/${url}?q=${encodeURIComponent(JSON.stringify(where))}`, {
         credentials: this.params.credentials,
         headers: this.params.headers
       }).then(this.status)
