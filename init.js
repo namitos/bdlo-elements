@@ -45,7 +45,7 @@
           let r = await res.json();
           return Promise.reject(r)
         } catch (err) {
-          return res
+          return Promise.reject(res)
         }
       }
     }
